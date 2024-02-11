@@ -1,0 +1,33 @@
+body {
+    background-color: hsl(229, 33%, 74%);
+}
+
+.logoutButton {
+    position: absolute;
+    top: 90%;
+    right: 50%;
+    width: 100px;
+    height: 30px;
+    font-family: josefin-sans;
+    font-size: 1rem;
+    color: rgb(0, 0, 0);
+    background-color: hsl(0, 0%, 100%);
+    border: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.button {
+    position: absolute;
+    margin-top: 30px;
+    margin-left: 25px;
+    width: 100px;
+    height: 30px;
+    font-family: josefin-sans;
+    font-size: 1rem;
+    color: rgb(0, 0, 0);
+    background-color: hsl(0, 0%, 100%);
+    border: none;
+    justify-content: center;
+    align-items: center;
+}
