@@ -7,12 +7,13 @@ init()
 
 // initially get the 
 function init() {
-    //  localStorage.clear() 
+    
+    //localStorage.clear() 
     let body = document.getElementById("app")
     if (localStorage.loggedIn != "true") {
         login()
     } else {
-      //  home()
+        home()
     }
 }
 
@@ -48,11 +49,10 @@ function login() {
     loginPassword.id = "password"
     loginPassword.required = true
 
-
     loginPassword.addEventListener("keyup", (e) => {
         if (e.key === 'Enter') {
             e.preventDefault()
-           auth()
+            authorizise()
         }
     })
 
@@ -65,6 +65,9 @@ function login() {
     error.style.display = "none"
     error.id = "error"
     error.className = "error"
+
+
+    
     
 // append all the shit to the loginForm -> to the loginDiv
     loginForm.appendChild(loginName)
@@ -76,12 +79,12 @@ function login() {
     loginDiv.appendChild(loginForm)
     loginForm.addEventListener("submit", (e) => {
         e.preventDefault()
-       auth()
+        authorizise()
     })
 }
 
 
-async function auth() {
+async function authorizise() {
 
     let error = document.getElementById("error")
     
@@ -108,7 +111,15 @@ async function auth() {
        
         // show the errorDiv
         error.style.display = ""
+        error.style.position = "absolute";
+        error.style.top = "calc(15% + 50px)";
+        error.style.width = "calc(100% - 50px)";
+        error.style.fontFamily = "josefin-sans";
+        error.style.fontSize = "1rem";
+        error.style.color = "red";
+        
         error.innerHTML = "Username / password incorrect, please try again"
+
         return
     }
 
@@ -136,9 +147,12 @@ function logout() {
 function home() {
     logOutDiv.style.display = ""
     app.style.display = ""
+    app.innerHTML = "";
 
     let header = document.createElement("h2")
     header.className = "sectionHeader"
-    header.innerHTML = "Your profile information will be here, all the shebännnng and i dont understand why it is displayed twice here : )"
+    header.innerHTML = "Your profile information will be here"
     app.appendChild(header)
+
+
 }
