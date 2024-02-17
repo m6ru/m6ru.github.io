@@ -133,57 +133,6 @@ function logout() {
     window.location.replace("/")
 }
 
-//this is the main beast :)
-
-// async function home() {
-//     logOutDiv.style.display = ""
-//     app.style.display = ""
-//     app.innerHTML = "";
-
-//     let header = document.createElement("h2")
-//     header.className = "sectionHeader"
-//     header.innerHTML = "Your profile information"
-//     app.appendChild(header)
-
-//     // creating a variable for the data that's going to be fetched
-//     let data = ""
-//     // variable for the authorization token, that we stored before
-//     let token = localStorage.getItem('JWToken')
-//     try {
-//         let response = await fetch('https://01.kood.tech/api/graphql-engine/v1/graphql', {
-//             method: 'POST',
-//             headers: {
-//                 // When making GraphQL queries, you'll supply the JWT using Bearer authentication. 
-//                 // It will only allow access to the data belonging to the authenticated user.
-//                 'Authorization': `Bearer ${token}`,
-//                 'Content-Type': 'application/json'
-//             },
-//             body: JSON.stringify({
-
-//                 // to find logic about how to get information from the query tables, see the page:
-//                 // https://github.com/01-edu/public/tree/master/subjects/graphql
-//                 query: `
-//                 {user {
-//                     id
-//                     login
-//                     createdAt
-//                 }
-//             }
-//             `
-//             })
-//         })
-//         data = await response.json()
-//     }
-//     catch (error) {
-//         console.log(error)
-//     }
-
-//     // Getting the data about the user and displaying it in the console.
-//     // Basic structure is here, now need to see what information need to get and how to display it.
-//     // Later also need to think how to make the diagrams
-//     console.log(data)
-
-// }
 
 // Modify the home function to call renderUserInfo with the fetched data
 async function home() {
@@ -205,6 +154,8 @@ async function home() {
 
         // Render user information to the page
         renderUserInfo(userData.data.user[0]);
+       
+
     }
 }
 
@@ -224,6 +175,14 @@ async function fetchUserData() {
                         id
                         login
                         createdAt
+                        transactions {
+                            id
+                            type
+                            amount
+                            objectId
+                            createdAt
+                            path
+                          }
                     }
                 }`
             })
@@ -253,11 +212,71 @@ function renderUserInfo(userData) {
     let userCreatedAt = document.createElement("p");
     userCreatedAt.textContent = "Account created at: " + new Date(userData.createdAt).toLocaleString();
 
+   // Calculate audits ratio
+   let auditsRatio = calculateAuditsRatio(userData.transactions);
+
+   // Create a paragraph element for audits ratio
+   let auditsRatioPara = document.createElement("p");
+   auditsRatioPara.textContent = "Audits Ratio: " + auditsRatio.toFixed(2);
+
+   // Calculate XP progression
+   let xpProgression = calculateXPProgression(userData.transactions);
+
+
+   // Create a paragraph element for xp progression
+   let xpProgressionElement = document.createElement("p");
+   xpProgressionElement.textContent = "XP Progression: " + xpProgression/1000 + "kB";
+
+
+
     // Append user information elements to the container
     userInfoContainer.appendChild(userId);
     userInfoContainer.appendChild(userLogin);
     userInfoContainer.appendChild(userCreatedAt);
+    userInfoContainer.appendChild(auditsRatioPara); 
+    userInfoContainer.appendChild(xpProgressionElement);
 
     // Append the container to the app div
     app.appendChild(userInfoContainer);
+}
+
+
+// Function to calculate the audits ratio
+function calculateAuditsRatio(transactions) {
+    // Initialize variables to count "up" and "down" transactions
+    let upAmount = 0;
+    let downAmount = 0;
+
+    // Loop through each transaction
+    transactions.forEach(transaction => {
+        // Check the type of transaction
+        if (transaction.type === "up") {
+            // Add the amount for up transaction
+            upAmount += transaction.amount;
+        } else if (transaction.type === "down") {
+            // Add the amount for down transaction
+            downAmount += transaction.amount;
+        }
+    });
+
+    // Calculate audits ratio
+    let auditsRatio = (upAmount / downAmount);
+
+    return auditsRatio;
+}
+
+// Function to calculate the total XP progression gained from performed tasks
+function calculateXPProgression(transactions) {
+    let totalXP = 0;
+
+    // Loop through each transaction
+    transactions.forEach(transaction => {
+        // Check if the transaction is for XP progression from performed tasks, taking out all the xp gained from piscines
+        if (transaction.type === "xp" && !transaction.path.includes('piscine')) {
+            totalXP += transaction.amount;
+        }
+        
+    });
+
+    return totalXP
 }
