@@ -135,51 +135,129 @@ function logout() {
 
 //this is the main beast :)
 
+// async function home() {
+//     logOutDiv.style.display = ""
+//     app.style.display = ""
+//     app.innerHTML = "";
+
+//     let header = document.createElement("h2")
+//     header.className = "sectionHeader"
+//     header.innerHTML = "Your profile information"
+//     app.appendChild(header)
+
+//     // creating a variable for the data that's going to be fetched
+//     let data = ""
+//     // variable for the authorization token, that we stored before
+//     let token = localStorage.getItem('JWToken')
+//     try {
+//         let response = await fetch('https://01.kood.tech/api/graphql-engine/v1/graphql', {
+//             method: 'POST',
+//             headers: {
+//                 // When making GraphQL queries, you'll supply the JWT using Bearer authentication. 
+//                 // It will only allow access to the data belonging to the authenticated user.
+//                 'Authorization': `Bearer ${token}`,
+//                 'Content-Type': 'application/json'
+//             },
+//             body: JSON.stringify({
+
+//                 // to find logic about how to get information from the query tables, see the page:
+//                 // https://github.com/01-edu/public/tree/master/subjects/graphql
+//                 query: `
+//                 {user {
+//                     id
+//                     login
+//                     createdAt
+//                 }
+//             }
+//             `
+//             })
+//         })
+//         data = await response.json()
+//     }
+//     catch (error) {
+//         console.log(error)
+//     }
+
+//     // Getting the data about the user and displaying it in the console.
+//     // Basic structure is here, now need to see what information need to get and how to display it.
+//     // Later also need to think how to make the diagrams
+//     console.log(data)
+
+// }
+
+// Modify the home function to call renderUserInfo with the fetched data
 async function home() {
-    logOutDiv.style.display = ""
-    app.style.display = ""
+    logOutDiv.style.display = "";
+    app.style.display = "";
     app.innerHTML = "";
 
-    let header = document.createElement("h2")
-    header.className = "sectionHeader"
-    header.innerHTML = "Your profile information"
-    app.appendChild(header)
+    let header = document.createElement("h2");
+    header.className = "sectionHeader";
+    header.textContent = "Your profile information";
+    app.appendChild(header);
 
-    // creating a variable for the data that's going to be fetched
-    let data = ""
-    // variable for the authorization token, that we stored before
-    let token = localStorage.getItem('JWToken')
+    // Fetch user data
+    let userData = await fetchUserData();
+    console.log(userData)
+
+    // Check if user data exists
+    if (userData) {
+
+        // Render user information to the page
+        renderUserInfo(userData.data.user[0]);
+    }
+}
+
+// Function to fetch user data
+async function fetchUserData() {
+    let token = localStorage.getItem('JWToken');
     try {
         let response = await fetch('https://01.kood.tech/api/graphql-engine/v1/graphql', {
             method: 'POST',
             headers: {
-                // When making GraphQL queries, you'll supply the JWT using Bearer authentication. 
-                // It will only allow access to the data belonging to the authenticated user.
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-
-                // to find logic about how to get information from the query tables, see the page:
-                // https://github.com/01-edu/public/tree/master/subjects/graphql
                 query: `
-                {user {
-                    id
-                    login
-                    createdAt
-                }
-            }
-            `
+                    { user {
+                        id
+                        login
+                        createdAt
+                    }
+                }`
             })
-        })
-        data = await response.json()
+        });
+        let data = await response.json();
+        return data; // Return user data
+    } catch (error) {
+        console.log(error);
+        return null; // Return null if error occurs
     }
-    catch (error) {
-        console.log(error)
-    }
+}
 
-    // Getting the data about the user and displaying it in the console.
-    // Basic structure is here, now need to see what information need to get and how to display it.
-    // Later also need to think how to make the diagrams
-    console.log(data)
+
+// Function to render user information to the page
+function renderUserInfo(userData) {
+
+    // Create elements to display user information
+    let userInfoContainer = document.createElement("div");
+    userInfoContainer.className = "userInfoContainer";
+
+    let userId = document.createElement("p");
+    userId.textContent = "User ID: " + userData.id;
+
+    let userLogin = document.createElement("p");
+    userLogin.textContent = "Username: " + userData.login;
+
+    let userCreatedAt = document.createElement("p");
+    userCreatedAt.textContent = "Account created at: " + new Date(userData.createdAt).toLocaleString();
+
+    // Append user information elements to the container
+    userInfoContainer.appendChild(userId);
+    userInfoContainer.appendChild(userLogin);
+    userInfoContainer.appendChild(userCreatedAt);
+
+    // Append the container to the app div
+    app.appendChild(userInfoContainer);
 }
