@@ -52,7 +52,7 @@ function login() {
     loginPassword.addEventListener("keyup", (e) => {
         if (e.key === 'Enter') {
             e.preventDefault()
-            authorizise()
+            authorize()
         }
     })
 
@@ -65,9 +65,6 @@ function login() {
     error.style.display = "none"
     error.id = "error"
     error.className = "error"
-
-
-    
     
 // append all the shit to the loginForm -> to the loginDiv
     loginForm.appendChild(loginName)
@@ -79,12 +76,12 @@ function login() {
     loginDiv.appendChild(loginForm)
     loginForm.addEventListener("submit", (e) => {
         e.preventDefault()
-        authorizise()
+        authorize()
     })
 }
 
 
-async function authorizise() {
+async function authorize() {
 
     let error = document.getElementById("error")
     
@@ -111,15 +108,6 @@ async function authorizise() {
        
         // show the errorDiv
         error.style.display = ""
-
-        // for some reason my styles.css is not updating the page, so i hardcoded it here for the moment. Will need to change that.
-        error.style.position = "absolute";
-        error.style.top = "calc(15% + 50px)";
-        error.style.width = "calc(100% - 50px)";
-        error.style.fontFamily = "josefin-sans";
-        error.style.fontSize = "1rem";
-        error.style.color = "red";
-        
         error.innerHTML = "Username / password incorrect, please try again"
 
         return
@@ -144,7 +132,6 @@ function logout() {
     localStorage.clear()
     window.location.replace("/")
 }
-
 
 //this is the main beast :)
 
