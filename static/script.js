@@ -213,11 +213,11 @@ function renderUserInfo(userData) {
     userCreatedAt.textContent = "Account created at: " + new Date(userData.createdAt).toLocaleString();
 
    // Calculate audits ratio
-   let auditsRatio = calculateAuditsRatio(userData.transactions);
+   let auditsData = calculateAuditsRatio(userData.transactions);
 
    // Create a paragraph element for audits ratio
    let auditsRatioPara = document.createElement("p");
-   auditsRatioPara.textContent = "Audits Ratio: " + auditsRatio.toFixed(2);
+   auditsRatioPara.textContent = "Audits Ratio: " + auditsData.auditsRatio.toFixed(2);
 
    // Calculate XP progression
    let xpProgression = calculateXPProgression(userData.transactions);
@@ -235,9 +235,12 @@ function renderUserInfo(userData) {
     userInfoContainer.appendChild(userCreatedAt);
     userInfoContainer.appendChild(auditsRatioPara); 
     userInfoContainer.appendChild(xpProgressionElement);
+    
+    
 
     // Append the container to the app div
     app.appendChild(userInfoContainer);
+    generateAuditRatioGraph(auditsData.auditsDone, auditsData.auditsReceived);
 }
 
 
@@ -262,7 +265,12 @@ function calculateAuditsRatio(transactions) {
     // Calculate audits ratio
     let auditsRatio = (upAmount / downAmount);
 
-    return auditsRatio;
+    // Return audits ratio, audits done, and audits received
+    return {
+        auditsRatio: auditsRatio,
+        auditsDone: upAmount,
+        auditsReceived: downAmount
+    };
 }
 
 // Function to calculate the total XP progression gained from performed tasks
@@ -280,3 +288,89 @@ function calculateXPProgression(transactions) {
 
     return totalXP
 }
+
+
+// Function to generate the doughnut graph for audit ratio using SVG
+function generateAuditRatioGraph(auditsDone, auditsReceived) {
+    // Calculate total audits
+    const totalAudits = auditsDone + auditsReceived;
+
+    // Calculate percentages
+    const auditsDoneRatio = auditsDone / totalAudits;
+    const auditsReceivedRatio = auditsReceived / totalAudits;
+
+    // Set up SVG dimensions and parameters
+    const svgWidth = 200;
+    const svgHeight = 200;
+    const centerX = svgWidth / 2;
+    const centerY = svgHeight / 2;
+    const radius = 80;
+    const strokeWidth = 40;
+
+    // Calculate angles for audits done and audits received
+const auditsDoneAngle = (360 * auditsDoneRatio);
+const auditsReceivedAngle = 360 - auditsDoneAngle; // Corrected calculation
+
+    // Create SVG container
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", svgWidth);
+    svg.setAttribute("height", svgHeight);
+
+    // Create outer circle (background)
+    const outerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    outerCircle.setAttribute("cx", centerX);
+    outerCircle.setAttribute("cy", centerY);
+    outerCircle.setAttribute("r", radius);
+    outerCircle.setAttribute("stroke", "#e0e0e0");
+    outerCircle.setAttribute("stroke-width", strokeWidth);
+    outerCircle.setAttribute("fill", "none");
+    svg.appendChild(outerCircle);
+
+
+// Create audits done arc
+const auditsDoneArc = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+auditsDoneArc.setAttribute("cx", centerX);
+auditsDoneArc.setAttribute("cy", centerY);
+auditsDoneArc.setAttribute("r", radius);
+auditsDoneArc.setAttribute("stroke", "#4CAF50"); 
+auditsDoneArc.setAttribute("stroke-width", strokeWidth);
+auditsDoneArc.setAttribute("fill", "none");
+auditsDoneArc.setAttribute("stroke-dasharray", auditsDoneAngle + ", " + (360 - auditsDoneAngle));
+svg.appendChild(auditsDoneArc);
+
+// Create audits received arc
+const auditsReceivedArc = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+auditsReceivedArc.setAttribute("cx", centerX);
+auditsReceivedArc.setAttribute("cy", centerY);
+auditsReceivedArc.setAttribute("r", radius);
+auditsReceivedArc.setAttribute("stroke", "#FF5722"); // Red color for audits received
+auditsReceivedArc.setAttribute("stroke-width", strokeWidth);
+auditsReceivedArc.setAttribute("fill", "none");
+auditsReceivedArc.setAttribute("stroke-dasharray", auditsReceivedAngle + ", " + (360 - auditsReceivedAngle));
+auditsReceivedArc.setAttribute("transform", `rotate(${auditsDoneAngle}, ${centerX}, ${centerY})`);
+svg.appendChild(auditsReceivedArc);
+
+
+
+    // Create text labels for audits done and audits received
+    const auditsDoneLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    auditsDoneLabel.setAttribute("x", centerX);
+    auditsDoneLabel.setAttribute("y", centerY - 10);
+    auditsDoneLabel.setAttribute("font-size", "16px");
+    auditsDoneLabel.setAttribute("text-anchor", "middle");
+    auditsDoneLabel.textContent = `Audits Done: ${(auditsDoneRatio * 100).toFixed(2)}%`;
+    svg.appendChild(auditsDoneLabel);
+
+    const auditsReceivedLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    auditsReceivedLabel.setAttribute("x", centerX);
+    auditsReceivedLabel.setAttribute("y", centerY + 20);
+    auditsReceivedLabel.setAttribute("font-size", "16px");
+    auditsReceivedLabel.setAttribute("text-anchor", "middle");
+    auditsReceivedLabel.textContent = `Audits Received: ${(auditsReceivedRatio * 100).toFixed(2)}%`;
+    svg.appendChild(auditsReceivedLabel);
+
+    // Append SVG to container
+    app.appendChild(svg);
+}
+
+
