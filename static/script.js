@@ -227,8 +227,6 @@ function renderUserInfo(userData) {
    let xpProgressionElement = document.createElement("p");
    xpProgressionElement.textContent = "XP Progression: " + xpProgression/1000 + "kB";
 
-
-
     // Append user information elements to the container
     userInfoContainer.appendChild(userId);
     userInfoContainer.appendChild(userLogin);
@@ -236,11 +234,15 @@ function renderUserInfo(userData) {
     userInfoContainer.appendChild(auditsRatioPara); 
     userInfoContainer.appendChild(xpProgressionElement);
     
-    
-
     // Append the container to the app div
     app.appendChild(userInfoContainer);
-    generateAuditRatioGraph(auditsData.auditsDone, auditsData.auditsReceived);
+
+    
+    // Append the pie chart to the app div
+    renderPieChart(auditsData.auditsDone, auditsData.auditsReceived);
+
+     // Render XP progression graph
+     renderXPProgressionGraph(userData.transactions);
 }
 
 
@@ -290,87 +292,179 @@ function calculateXPProgression(transactions) {
 }
 
 
-// Function to generate the doughnut graph for audit ratio using SVG
-function generateAuditRatioGraph(auditsDone, auditsReceived) {
-    // Calculate total audits
-    const totalAudits = auditsDone + auditsReceived;
+// Function to render the pie chart
 
-    // Calculate percentages
-    const auditsDoneRatio = auditsDone / totalAudits;
-    const auditsReceivedRatio = auditsReceived / totalAudits;
+function renderPieChart(upAmount, downAmount) {
+   
+    // Define the colors for the pie chart
+const colors = ['#2ca02c', '#98df8a'];
 
-    // Set up SVG dimensions and parameters
-    const svgWidth = 200;
-    const svgHeight = 200;
-    const centerX = svgWidth / 2;
-    const centerY = svgHeight / 2;
-    const radius = 80;
-    const strokeWidth = 40;
+    // Calculate total audits (sum of up and down)
+    const totalAudits = upAmount + downAmount;
 
-    // Calculate angles for audits done and audits received
-const auditsDoneAngle = (360 * auditsDoneRatio);
-const auditsReceivedAngle = 360 - auditsDoneAngle; // Corrected calculation
+    // Calculate the percentage of audits done and received
+    const percentAuditsDone = (upAmount / totalAudits) * 100;
+    const percentAuditsReceived = (downAmount / totalAudits) * 100;
 
-    // Create SVG container
+    // Create the SVG element
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", svgWidth);
-    svg.setAttribute("height", svgHeight);
+    svg.setAttribute("width", "200");
+    svg.setAttribute("height", "240"); // Adjusted height to accommodate text
+    svg.style.display = "block"; // Ensuring block display for proper positioning
 
-    // Create outer circle (background)
-    const outerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    outerCircle.setAttribute("cx", centerX);
-    outerCircle.setAttribute("cy", centerY);
-    outerCircle.setAttribute("r", radius);
-    outerCircle.setAttribute("stroke", "#e0e0e0");
-    outerCircle.setAttribute("stroke-width", strokeWidth);
-    outerCircle.setAttribute("fill", "none");
-    svg.appendChild(outerCircle);
+    // Set the radius and center of the pie chart
+    const radius = 80;
+    const centerX = 100;
+    const centerY = 100;
 
+    // Initialize variables for drawing the pie slices
+    let startAngle = 0;
+    let endAngle = 0;
 
-// Create audits done arc
-const auditsDoneArc = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-auditsDoneArc.setAttribute("cx", centerX);
-auditsDoneArc.setAttribute("cy", centerY);
-auditsDoneArc.setAttribute("r", radius);
-auditsDoneArc.setAttribute("stroke", "#4CAF50"); 
-auditsDoneArc.setAttribute("stroke-width", strokeWidth);
-auditsDoneArc.setAttribute("fill", "none");
-auditsDoneArc.setAttribute("stroke-dasharray", auditsDoneAngle + ", " + (360 - auditsDoneAngle));
-svg.appendChild(auditsDoneArc);
+    // Draw the "audits done" slice
+    endAngle = (percentAuditsDone / 100) * 360;
+    const path1 = describeArc(centerX, centerY, radius, startAngle, endAngle);
+    const slice1 = createSlice(path1, colors[0]);
+    svg.appendChild(slice1);
+    startAngle = endAngle;
 
-// Create audits received arc
-const auditsReceivedArc = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-auditsReceivedArc.setAttribute("cx", centerX);
-auditsReceivedArc.setAttribute("cy", centerY);
-auditsReceivedArc.setAttribute("r", radius);
-auditsReceivedArc.setAttribute("stroke", "#FF5722"); // Red color for audits received
-auditsReceivedArc.setAttribute("stroke-width", strokeWidth);
-auditsReceivedArc.setAttribute("fill", "none");
-auditsReceivedArc.setAttribute("stroke-dasharray", auditsReceivedAngle + ", " + (360 - auditsReceivedAngle));
-auditsReceivedArc.setAttribute("transform", `rotate(${auditsDoneAngle}, ${centerX}, ${centerY})`);
-svg.appendChild(auditsReceivedArc);
+    // Draw the "audits received" slice
+    endAngle = 360;
+    const path2 = describeArc(centerX, centerY, radius, startAngle, endAngle);
+    const slice2 = createSlice(path2, colors[1]);
+    svg.appendChild(slice2);
 
-
-
-    // Create text labels for audits done and audits received
-    const auditsDoneLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    auditsDoneLabel.setAttribute("x", centerX);
-    auditsDoneLabel.setAttribute("y", centerY - 10);
-    auditsDoneLabel.setAttribute("font-size", "16px");
-    auditsDoneLabel.setAttribute("text-anchor", "middle");
-    auditsDoneLabel.textContent = `Audits Done: ${(auditsDoneRatio * 100).toFixed(2)}%`;
-    svg.appendChild(auditsDoneLabel);
-
-    const auditsReceivedLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    auditsReceivedLabel.setAttribute("x", centerX);
-    auditsReceivedLabel.setAttribute("y", centerY + 20);
-    auditsReceivedLabel.setAttribute("font-size", "16px");
-    auditsReceivedLabel.setAttribute("text-anchor", "middle");
-    auditsReceivedLabel.textContent = `Audits Received: ${(auditsReceivedRatio * 100).toFixed(2)}%`;
-    svg.appendChild(auditsReceivedLabel);
-
-    // Append SVG to container
+    // Append the SVG to the app div
     app.appendChild(svg);
+
+    // Calculate percentages as strings
+    const donePercentageString = percentAuditsDone.toFixed(2) + "%";
+    const receivedPercentageString = percentAuditsReceived.toFixed(2) + "%";
+
+    // Create text elements for displaying percentages
+    const PercentageText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    PercentageText.setAttribute("x", centerX);
+    PercentageText.setAttribute("y", centerY + radius + 20);
+    PercentageText.setAttribute("text-anchor", "middle");
+    PercentageText.textContent = receivedPercentageString + " / " + donePercentageString;
+
+     // Create text elements for displaying percentages
+     const nameText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+     nameText.setAttribute("x", centerX);
+     nameText.setAttribute("y", centerY + radius + 40);
+     nameText.setAttribute("text-anchor", "middle");
+     nameText.textContent = "audits received / done"
+
+
+    // Append text elements to the SVG
+    svg.appendChild(PercentageText);
+    svg.appendChild(nameText)
+    
+}
+
+// Function to create a pie slice path
+function describeArc(x, y, radius, startAngle, endAngle) {
+    const startRadians = (startAngle - 90) * Math.PI / 180;
+    const endRadians = (endAngle - 90) * Math.PI / 180;
+
+    const startX = x + radius * Math.cos(startRadians);
+    const startY = y + radius * Math.sin(startRadians);
+
+    const endX = x + radius * Math.cos(endRadians);
+    const endY = y + radius * Math.sin(endRadians);
+
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+    const d = [
+        "M", x, y,
+        "L", startX, startY,
+        "A", radius, radius, 0, largeArcFlag, 1, endX, endY,
+        "Z"
+    ].join(" ");
+
+    return d;
+}
+
+// Function to create a pie slice
+function createSlice(path, color) {
+    const slice = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    slice.setAttribute("d", path);
+    slice.setAttribute("fill", color);
+    return slice;
 }
 
 
+// Function to render the XP progression graph using D3.js
+function renderXPProgressionGraph(transactions) {
+    // Filter transactions for XP progression from performed tasks
+    const xpTransactions = transactions.filter(transaction => transaction.type === "xp" && !transaction.path.includes('piscine') && transaction.createdAt);
+
+    // Sort XP transactions by createdAt timestamp
+    xpTransactions.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+    // Extract timestamps and XP amounts from filtered transactions
+    const timestamps = xpTransactions.map(transaction => new Date(transaction.createdAt));
+    const xpAmounts = xpTransactions.map(transaction => transaction.amount);
+
+    // Calculate cumulative XP amounts over performed tasks
+    const cumulativeXP = xpAmounts.reduce((acc, xp) => {
+        acc.push((acc.length > 0 ? acc[acc.length - 1] : 0) + xp);
+        return acc;
+    }, []);
+
+    // Define margins and dimensions for the graph
+    const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+    const fullWidth = Math.min(0.6 * window.innerWidth, 800); // 80% of window width, capped at 800px
+    const width = fullWidth - margin.left - margin.right;
+    const height = Math.round((2 / 3) * width); // Maintain 2:3 aspect ratio
+
+    // Create SVG element using D3.js
+    const svg = d3.select("#app")
+        .append("svg")
+        .attr("width", fullWidth)
+        .attr("height", height + margin.top + margin.bottom);
+
+   // Create X axis scale using D3.js
+const xScale = d3.scaleTime()
+.domain([timestamps[0], d3.max(timestamps)])  // Adjusted to start from the first timestamp
+.range([0, width]);
+
+    // Create Y axis scale using D3.js
+const yScale = d3.scaleLinear()
+.domain([0, d3.max(cumulativeXP)])  // Adjusted to include 0
+.range([height, 0]);
+
+    // Create X axis using D3.js
+    const xAxis = d3.axisBottom(xScale);
+    svg.append("g")
+        .attr("transform", `translate(${margin.left}, ${height + margin.top})`)
+        .call(xAxis);
+
+    // Create Y axis using D3.js
+    const yAxis = d3.axisLeft(yScale);
+    svg.append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`)
+        .call(yAxis);
+
+    // Create line generator using D3.js
+    const line = d3.line()
+        .x((d, i) => xScale(timestamps[i]))
+        .y((d, i) => yScale(cumulativeXP[i]));
+
+    // Draw line graph using D3.js
+    svg.append("path")
+        .datum(timestamps)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 4)
+        .attr("transform", `translate(${margin.left}, ${margin.top})`)
+        .attr("d", line);
+
+        // Append a title to the graph
+svg.append("text")
+.attr("x", (width + margin.left + margin.right) / 2)
+.attr("y", height/15)
+.attr("text-anchor", "middle")
+.style("font-size", "16px")
+.text("XP Progression");
+}
