@@ -5,10 +5,8 @@ var logOutDiv = document.getElementById("logOutDiv")
 
 init()
 
-// initially get the 
 function init() {
     
-    //localStorage.clear() 
     let body = document.getElementById("app")
     if (localStorage.loggedIn != "true") {
         login()
@@ -19,14 +17,9 @@ function init() {
 
 function login() {
    
-    //hide the app div, don't need to show it while login page
     app.style.display = "none"
-
-
-    //get the loginDiv (html hardcoded)
     let loginDiv = document.getElementById("loginDiv")
     loginDiv.className = "login"
-
 
     let loginForm = document.createElement("form")
     let lineBreak = document.createElement("br")
@@ -80,12 +73,9 @@ function login() {
     })
 }
 
-
 async function authorize() {
 
     let error = document.getElementById("error")
-    
-    //hide error div, display only when appears
     error.style.display = "none"
     usernameEmail = document.getElementById("username").value
     password = document.getElementById("password").value
@@ -105,45 +95,31 @@ async function authorize() {
     // 401 - request lacks valid authentication credentials for the target resource.
     // 403 - server understood the request but refuses to authorize it, due to permissions or security reasons. (WRONG username/pass)
     if (response.status == "401" || response.status == "403") {
-       
-        // show the errorDiv
         error.style.display = ""
         error.innerHTML = "Username / password incorrect, please try again"
-
         return
     }
 
     // Storing the information about token in the local storage and setting the loggedIn flag true
     localStorage.setItem('JWToken', token)
-    localStorage.setItem('loggedIn', true)
-   
-    //turning the loginDiv off by not displaying it
+    localStorage.setItem('loggedIn', true) 
     document.getElementById("loginDiv").style.display = "none"
-    
-    // Opening the home page
+
     home()
 }
 
 
-// function for logging out, this is hardcoded in HTML, so when clicking, triggers this:
 function logout() {
 
-    //remove the token and loggedIn information from local storage (ending the session basically)
     localStorage.clear()
     window.location.replace("/")
 }
 
-
-// Modify the home function to call renderUserInfo with the fetched data
 async function home() {
+
     logOutDiv.style.display = "";
     app.style.display = "";
     app.innerHTML = "";
-
-    let header = document.createElement("h2");
-    header.className = "sectionHeader";
-    header.textContent = "Your profile information";
-    app.appendChild(header);
 
     // Fetch user data
     let userData = await fetchUserData();
@@ -151,11 +127,7 @@ async function home() {
 
     // Check if user data exists
     if (userData) {
-
-        // Render user information to the page
         renderUserInfo(userData.data.user[0]);
-       
-
     }
 }
 
@@ -188,20 +160,23 @@ async function fetchUserData() {
             })
         });
         let data = await response.json();
-        return data; // Return user data
+        return data; 
     } catch (error) {
         console.log(error);
         return null; // Return null if error occurs
     }
 }
 
-
-// Function to render user information to the page
 function renderUserInfo(userData) {
 
     // Create elements to display user information
     let userInfoContainer = document.createElement("div");
     userInfoContainer.className = "userInfoContainer";
+
+    let header = document.createElement("p");
+    header.textContent = "My profile information:";
+    header.style.fontWeight = "bold"; 
+    header.style.fontSize = "1.3em";
 
     let userId = document.createElement("p");
     userId.textContent = "User ID: " + userData.id;
@@ -222,12 +197,12 @@ function renderUserInfo(userData) {
    // Calculate XP progression
    let xpProgression = calculateXPProgression(userData.transactions);
 
-
    // Create a paragraph element for xp progression
    let xpProgressionElement = document.createElement("p");
    xpProgressionElement.textContent = "XP Progression: " + xpProgression/1000 + "kB";
 
     // Append user information elements to the container
+    userInfoContainer.appendChild(header);
     userInfoContainer.appendChild(userId);
     userInfoContainer.appendChild(userLogin);
     userInfoContainer.appendChild(userCreatedAt);
@@ -237,37 +212,29 @@ function renderUserInfo(userData) {
     // Append the container to the app div
     app.appendChild(userInfoContainer);
 
-    
     // Append the pie chart to the app div
     renderPieChart(auditsData.auditsDone, auditsData.auditsReceived);
 
-     // Render XP progression graph
-     renderXPProgressionGraph(userData.transactions);
+    // Render XP progression graph
+    renderXPProgressionGraph(userData.transactions);
 }
-
 
 // Function to calculate the audits ratio
 function calculateAuditsRatio(transactions) {
-    // Initialize variables to count "up" and "down" transactions
+    
     let upAmount = 0;
     let downAmount = 0;
 
-    // Loop through each transaction
     transactions.forEach(transaction => {
-        // Check the type of transaction
         if (transaction.type === "up") {
-            // Add the amount for up transaction
             upAmount += transaction.amount;
         } else if (transaction.type === "down") {
-            // Add the amount for down transaction
             downAmount += transaction.amount;
         }
     });
 
-    // Calculate audits ratio
     let auditsRatio = (upAmount / downAmount);
 
-    // Return audits ratio, audits done, and audits received
     return {
         auditsRatio: auditsRatio,
         auditsDone: upAmount,
@@ -279,38 +246,29 @@ function calculateAuditsRatio(transactions) {
 function calculateXPProgression(transactions) {
     let totalXP = 0;
 
-    // Loop through each transaction
     transactions.forEach(transaction => {
         // Check if the transaction is for XP progression from performed tasks, taking out all the xp gained from piscines
         if (transaction.type === "xp" && !transaction.path.includes('piscine')) {
             totalXP += transaction.amount;
         }
-        
     });
 
     return totalXP
 }
 
-
 // Function to render the pie chart
-
 function renderPieChart(upAmount, downAmount) {
-   
-    // Define the colors for the pie chart
-const colors = ['#2ca02c', '#98df8a'];
 
-    // Calculate total audits (sum of up and down)
+    const colors = ['#2ca02c', '#98df8a'];
     const totalAudits = upAmount + downAmount;
-
-    // Calculate the percentage of audits done and received
     const percentAuditsDone = (upAmount / totalAudits) * 100;
     const percentAuditsReceived = (downAmount / totalAudits) * 100;
 
     // Create the SVG element
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("width", "200");
-    svg.setAttribute("height", "240"); // Adjusted height to accommodate text
-    svg.style.display = "block"; // Ensuring block display for proper positioning
+    svg.setAttribute("height", "240"); 
+    svg.style.display = "block";
 
     // Set the radius and center of the pie chart
     const radius = 80;
@@ -334,7 +292,7 @@ const colors = ['#2ca02c', '#98df8a'];
     const slice2 = createSlice(path2, colors[1]);
     svg.appendChild(slice2);
 
-    // Append the SVG to the app div
+    // Append the pie chart container to the app div
     app.appendChild(svg);
 
     // Calculate percentages as strings
@@ -348,15 +306,12 @@ const colors = ['#2ca02c', '#98df8a'];
     PercentageText.setAttribute("text-anchor", "middle");
     PercentageText.textContent = receivedPercentageString + " / " + donePercentageString;
 
-     // Create text elements for displaying percentages
-     const nameText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-     nameText.setAttribute("x", centerX);
-     nameText.setAttribute("y", centerY + radius + 40);
-     nameText.setAttribute("text-anchor", "middle");
-     nameText.textContent = "audits received / done"
+    const nameText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    nameText.setAttribute("x", centerX);
+    nameText.setAttribute("y", centerY + radius + 40);
+    nameText.setAttribute("text-anchor", "middle");
+    nameText.textContent = "audits received / done"
 
-
-    // Append text elements to the SVG
     svg.appendChild(PercentageText);
     svg.appendChild(nameText)
     
@@ -396,6 +351,7 @@ function createSlice(path, color) {
 
 // Function to render the XP progression graph using D3.js
 function renderXPProgressionGraph(transactions) {
+    
     // Filter transactions for XP progression from performed tasks
     const xpTransactions = transactions.filter(transaction => transaction.type === "xp" && !transaction.path.includes('piscine') && transaction.createdAt);
 
@@ -414,7 +370,7 @@ function renderXPProgressionGraph(transactions) {
 
     // Define margins and dimensions for the graph
     const margin = { top: 20, right: 20, bottom: 30, left: 50 };
-    const fullWidth = Math.min(0.6 * window.innerWidth, 800); // 80% of window width, capped at 800px
+    const fullWidth = Math.min(0.5 * window.innerWidth, 800); // 60% of window width, capped at 800px
     const width = fullWidth - margin.left - margin.right;
     const height = Math.round((2 / 3) * width); // Maintain 2:3 aspect ratio
 
@@ -424,15 +380,15 @@ function renderXPProgressionGraph(transactions) {
         .attr("width", fullWidth)
         .attr("height", height + margin.top + margin.bottom);
 
-   // Create X axis scale using D3.js
-const xScale = d3.scaleTime()
-.domain([timestamps[0], d3.max(timestamps)])  // Adjusted to start from the first timestamp
-.range([0, width]);
+    // Create X axis scale using D3.js
+    const xScale = d3.scaleTime()
+        .domain([timestamps[0], d3.max(timestamps)])  // Adjusted to start from the first timestamp
+        .range([0, width]);
 
     // Create Y axis scale using D3.js
-const yScale = d3.scaleLinear()
-.domain([0, d3.max(cumulativeXP)])  // Adjusted to include 0
-.range([height, 0]);
+    const yScale = d3.scaleLinear()
+        .domain([0, d3.max(cumulativeXP)])  // Adjusted to include 0
+        .range([height, 0]);
 
     // Create X axis using D3.js
     const xAxis = d3.axisBottom(xScale);
@@ -460,11 +416,11 @@ const yScale = d3.scaleLinear()
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .attr("d", line);
 
-        // Append a title to the graph
-svg.append("text")
-.attr("x", (width + margin.left + margin.right) / 2)
-.attr("y", height/15)
-.attr("text-anchor", "middle")
-.style("font-size", "16px")
-.text("XP Progression");
+    // Append a title to the graph
+    svg.append("text")
+        .attr("x", (width + margin.left + margin.right) / 2)
+        .attr("y", height/15)
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .text("XP Progression");    
 }

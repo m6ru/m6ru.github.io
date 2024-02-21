@@ -1,6 +1,7 @@
 body {
     background-color: hsl(229, 33%, 74%);
     font-family: 'Times New Roman', Times, serif;
+    margin-left: 75px;
 }
 
 .logoutButton, .button {
@@ -37,3 +38,10 @@ body {
 }
 
 
+.app {
+    display: flex;
+}
+
+.app > svg {
+   margin-left: 100px;
+}
